@@ -28,6 +28,7 @@ import re
 import sys 
 import os
 import socket
+import math
 import urllib2
 import BeautifulSoup
 import PerfSonarAccessor
@@ -58,6 +59,7 @@ class LarkUtilities(object):
 #                       H e l p e r   F u n c t i o n s                       #
 #                                                                             #
 ###############################################################################
+
     @staticmethod
     def normalizeWhitespace(str):
         # Strip leading and trailing whitespace.
@@ -94,6 +96,7 @@ class LarkUtilities(object):
         city_country = stripped_data[2]
         stripped = city_country.partition(' (')
         city_txt = stripped[0]
+        #if normalizedWhtiespace("unknown")
         #for i, key in enumerate(countries):
         #    if  normalize_whitespace(countries[i][1]) in normalize_whitespace(city_country):
         #        print haystack[i][1]
@@ -101,13 +104,23 @@ class LarkUtilities(object):
         return city_txt
 
     @staticmethod
-    def longLat(city_country):
-        # Find longitude and latitude of city/country.
-        return longitude, latitude
+    def latLong(city_country):
+        # Find latitude and longitude of city/country.
+        return latitude, longitude
 
     @staticmethod
     def coordinateDiff(long1, lat1, long2, lat2):
         # Find distance between two coordinates
+        # Haversine formula
+        R = 6371
+        d_lat = math.radians((lat2-lat1))
+        d_long = math.radians((long2-long1))
+        lat1 = math.radians(lat1)
+        lat2 = math.radians(lat2)
+        a = math.sin(d_lat/2)**2 +
+            math.sin(d_long/2)**2 * math.cos(lat1) * math.cos(lat2)
+        c = 2 * math.atan2(math.sqrt(a), math/sqrt(1-a))
+        distance = R * c
         return distance
 
     @staticmethod
@@ -118,14 +131,16 @@ class LarkUtilities(object):
         # countries = list(getCountries())
         city_country = cityCountryParser(raw_data)
         print(city_country)
-        longitude, latitude = longLat(city_country)
-        return longitude, latitude
+        if "UNKNOWN" in normalizeWhitespace(city_country):
+            return -80, -100
+        latitude, longitude = latLong(city_country)
+        return latitude, longitude
     
     @staticmethod
     def IPDistance(IP1, IP2):
         # Given two IP addresses, find distance between these in real life
-        long1, lat1 = IPGeolocate(IP1)
-        long2, lat2 = IPGeolocate(IP2)
+        lat1, long1 = IPGeolocate(IP1)
+        lat2, long2 = IPGeolocate(IP2)
         distance = coordinateDiff(long1, lat1, long2, lat2)
         return distance
 

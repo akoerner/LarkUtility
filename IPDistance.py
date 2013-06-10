@@ -58,4 +58,6 @@ else:
 
 raw_data = getGeody(IP)
 city_country = cityCountryParser(raw_data)
+if "UNKNOWN" in normalizeWhitespace(city_country):
+    
 print(city_country)
