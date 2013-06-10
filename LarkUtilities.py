@@ -66,30 +66,30 @@ class LarkUtilities(object):
         # Strip leading and trailing whitespace.
         # Make all remaining whitespace (tabs, etc) to spaces.
         # re is imported regular expression object
+        # Pre: Any str
+        # Post: Stripped leading and trailing whitespaces and all whitespace
+        #       like tabs etc are now normal spaces.
         return re.sub(r'\s+', ' ', str.strip())
     
     @staticmethod
     def getGeody(IP):
         # Fetch location data from geody
+        # Unknown behaviour on IPv6 address, only tested on IPv4
+        # Check compatibility on geody.com
+        # Pre: An IP address in str format
+        # Post: BeautifulSoup data from geody, not str
         geody = "http://www.geody.com/geoip.php?ip=" + IP
         html_page = urllib2.urlopen(geody).read()
         soup = BeautifulSoup.BeautifulSoup(html_page)
         return soup('p')[3]
 
     @staticmethod
-    def getCountries():
-        # Get a list of all countries from file.
-        # Is used for comparison later. File written in ISO standard
-        countries = []
-        lines = open("countries.txt", 'r').readlines()
-        for line in lines:
-            countries.append(line.strip().split('\t',1))
-        return countries
-
-    @staticmethod
     def cityCountryParser(data):
         # Seperate city and country into two str's
         # Strip all else and return
+        # Pre: BeautifulSoup data from geody
+        # Post: A str with city, country and optionally state/province.
+        #       CITY, [STATE/PROVINCE], COUNTRY
         geo_txt = re.sub(r'<.*?>', '', str(data))
         geo_txt = geo_txt[32:].upper().strip()
         stripped_data = geo_txt.strip("IP: ").partition(': ')
@@ -103,6 +103,9 @@ class LarkUtilities(object):
         # Find latitude and longitude of city/country.
         # This function is not extremely accurate yet.
         # Would like to pick best result instead of first.
+        # Pre: A str containing city, country and if available state/province. 
+        #      CITY, [STATE/PROVINCE], COUNTRY
+        # Post: Latitude and longitude of IP address in str format
         geody = "http://www.geody.com/geolook.php?world=terra&map=col&q=" + urllib.quote(city_country) + "&subm1=submit"
         html_page = urllib2.urlopen(geody).read()
         soup = BeautifulSoup.BeautifulSoup(html_page)
@@ -118,12 +121,14 @@ class LarkUtilities(object):
     def IPGeolocate(IP):
         # Get data about IP address and parse it to extract city and country.
         # Translate city and country into longitude and latitude coordinates.
+        # Pre: IP address in str format
+        # Post: Longitude and latitude coordinates for IP address, str format
         raw_data = getGeody(IP)
         city_country = cityCountryParser(raw_data)
         print(city_country)
-        # Return coordinates for antarctica if unknown
+        # Return coordinates for antarctica if unknown position of IP
         if "UNKNOWN" in normalizeWhitespace(city_country):
-            return -80, -100
+            return str(-80), str(-100)
         latitude, longitude = latLong(city_country)
         return latitude, longitude
 
@@ -131,6 +136,8 @@ class LarkUtilities(object):
     def coordinateDiff(lat1, long1, lat2, long2):
         # Find distance between two coordinates
         # Haversine formula
+        # Pre: latitude and longitude for two points in str
+        # Post: Distance in km between the two points, float format
         R = 6371
         lat1 = float(lat1)
         lat2 = float(lat2)
@@ -148,6 +155,8 @@ class LarkUtilities(object):
     @staticmethod
     def IPDistance(IP1, IP2):
         # Given two IP addresses, find distance between these in real life
+        # Pre: Two IP addresses in str format
+        # Post: Distance in km between the two IP addresses in float
         lat1, long1 = IPGeolocate(IP1)
         lat2, long2 = IPGeolocate(IP2)
         distance = coordinateDiff(lat1, long1, lat2, long2)
