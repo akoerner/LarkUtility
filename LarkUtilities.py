@@ -103,8 +103,7 @@ class LarkUtilities(object):
         # Find latitude and longitude of city/country.
         # This function is not extremely accurate yet.
         # Would like to pick best result instead of first.
-        geody = "http://www.geody.com/geolook.php?world=terra&map=col&q=" + 
-                urllib.quote(city_country) + "&subm1=submit"
+        geody = "http://www.geody.com/geolook.php?world=terra&map=col&q=" + urllib.quote(city_country) + "&subm1=submit"
         html_page = urllib2.urlopen(geody).read()
         soup = BeautifulSoup.BeautifulSoup(html_page)
         link = soup('a')[10]
@@ -114,21 +113,6 @@ class LarkUtilities(object):
         latitude = strip3[0]
         longitude = strip3[2]
         return latitude, longitude
-
-    @staticmethod
-    def coordinateDiff(long1, lat1, long2, lat2):
-        # Find distance between two coordinates
-        # Haversine formula
-        R = 6371
-        d_lat = math.radians((lat2-lat1))
-        d_long = math.radians((long2-long1))
-        lat1 = math.radians(lat1)
-        lat2 = math.radians(lat2)
-        a = math.sin(d_lat/2)**2 +
-            math.sin(d_long/2)**2 * math.cos(lat1) * math.cos(lat2)
-        c = 2 * math.atan2(math.sqrt(a), math/sqrt(1-a))
-        distance = R * c
-        return distance
 
     @staticmethod
     def IPGeolocate(IP):
@@ -142,13 +126,31 @@ class LarkUtilities(object):
             return -80, -100
         latitude, longitude = latLong(city_country)
         return latitude, longitude
+
+    @staticmethod
+    def coordinateDiff(lat1, long1, lat2, long2):
+        # Find distance between two coordinates
+        # Haversine formula
+        R = 6371
+        lat1 = float(lat1)
+        lat2 = float(lat2)
+        long1 = float(long1)
+        long2 = float(long2)
+        d_lat = math.radians((lat2-lat1))
+        d_long = math.radians((long2-long1))
+        lat1 = math.radians(lat1)
+        lat2 = math.radians(lat2)
+        a = math.sin(d_lat/2)**2 + math.sin(d_long/2)**2 * math.cos(lat1) * math.cos(lat2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        distance = R * c
+        return distance
     
     @staticmethod
     def IPDistance(IP1, IP2):
         # Given two IP addresses, find distance between these in real life
         lat1, long1 = IPGeolocate(IP1)
         lat2, long2 = IPGeolocate(IP2)
-        distance = coordinateDiff(long1, lat1, long2, lat2)
+        distance = coordinateDiff(lat1, long1, lat2, long2)
         return distance
 
     #
