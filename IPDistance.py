@@ -18,6 +18,7 @@ If city is not already in the table, use google's service to find long and lat.
 
 import re
 import sys
+import urllib
 import urllib2
 import BeautifulSoup
 
@@ -48,6 +49,13 @@ def cityCountryParser(data):
     city_txt = stripped[0]
     return city_txt
 
+def latLong(city_country):
+    # Find latitude and longitude of city/country.
+    geody = "http://www.geody.com/geolook.php?world=terra&map=col&q=" + urllib.quote(city_country) + "&subm1=submit"
+    html_page = urllib2.urlopen(geody).read()
+    soup = BeautifulSoup.BeautifulSoup(html_page)
+    # soup('p')[3]
+    return soup
 
 # Script starts
 if len(sys.argv)!=2:
@@ -58,6 +66,11 @@ else:
 
 raw_data = getGeody(IP)
 city_country = cityCountryParser(raw_data)
-if "UNKNOWN" in normalizeWhitespace(city_country):
-    
 print(city_country)
+soup = latLong(city_country)
+link = soup('a')[10]
+strip1 = str(link).partition('Coords: ')
+strip2 = strip1[2].partition('\"')
+strip3 = strip2[0].partition(',')
+latitude = strip3[0]
+longitude = strip3[2]

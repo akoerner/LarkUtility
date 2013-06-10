@@ -30,6 +30,7 @@ import os
 import socket
 import math
 import urllib2
+import urllib
 import BeautifulSoup
 import PerfSonarAccessor
 
@@ -89,23 +90,29 @@ class LarkUtilities(object):
     def cityCountryParser(data):
         # Seperate city and country into two str's
         # Strip all else and return
-        # Check for unknown city/country
         geo_txt = re.sub(r'<.*?>', '', str(data))
         geo_txt = geo_txt[32:].upper().strip()
         stripped_data = geo_txt.strip("IP: ").partition(': ')
         city_country = stripped_data[2]
         stripped = city_country.partition(' (')
         city_txt = stripped[0]
-        #if normalizedWhtiespace("unknown")
-        #for i, key in enumerate(countries):
-        #    if  normalize_whitespace(countries[i][1]) in normalize_whitespace(city_country):
-        #        print haystack[i][1]
-        #        break
         return city_txt
 
     @staticmethod
     def latLong(city_country):
         # Find latitude and longitude of city/country.
+        # This function is not extremely accurate yet.
+        # Would like to pick best result instead of first.
+        geody = "http://www.geody.com/geolook.php?world=terra&map=col&q=" + 
+                urllib.quote(city_country) + "&subm1=submit"
+        html_page = urllib2.urlopen(geody).read()
+        soup = BeautifulSoup.BeautifulSoup(html_page)
+        link = soup('a')[10]
+        strip1 = str(link).partition('Coords: ')
+        strip2 = strip1[2].partition('\"')
+        strip3 = strip2[0].partition(',')
+        latitude = strip3[0]
+        longitude = strip3[2]
         return latitude, longitude
 
     @staticmethod
@@ -128,9 +135,9 @@ class LarkUtilities(object):
         # Get data about IP address and parse it to extract city and country.
         # Translate city and country into longitude and latitude coordinates.
         raw_data = getGeody(IP)
-        # countries = list(getCountries())
         city_country = cityCountryParser(raw_data)
         print(city_country)
+        # Return coordinates for antarctica if unknown
         if "UNKNOWN" in normalizeWhitespace(city_country):
             return -80, -100
         latitude, longitude = latLong(city_country)
@@ -144,7 +151,9 @@ class LarkUtilities(object):
         distance = coordinateDiff(long1, lat1, long2, lat2)
         return distance
 
-
+    #
+    # Below are functions related to Lark
+    #
 
     @staticmethod
     def locatePerfSonarInstances(ISO_3166CountryCode, perfSonarProjectName):
