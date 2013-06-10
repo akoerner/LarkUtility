@@ -1,30 +1,41 @@
 #!/usr/bin/env python
 
-# copyright 2013 UNL Holland Computing Center
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#     you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
-#  
-#        http://www.apache.org/licenses/LICENSE-2.0
-#  
-#    Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#   See the License for the specific language governing permissions and
-#   limitations under the License.
+###############################################################################
+#                                                                             #
+# copyright 2013 UNL Holland Computing Center                                 #
+#                                                                             #
+#  Licensed under the Apache License, Version 2.0 (the "License");            #
+#     you may not use this file except in compliance with the License.        #
+#    You may obtain a copy of the License at                                  #
+#                                                                             #
+#        http://www.apache.org/licenses/LICENSE-2.0                           #
+#                                                                             #
+#    Unless required by applicable law or agreed to in writing, software      #
+#  distributed under the License is distributed on an "AS IS" BASIS,          #
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  #
+#   See the License for the specific language governing permissions and       #
+#   limitations under the License.                                            #
+#                                                                             #
+###############################################################################
+
+###############################################################################
+#                                                                             #
+#                         L A R K   U t i l i t i e s                         #
+#                                                                             #
+###############################################################################
 
 import re
-import sys, os
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-os.chdir(dname)
+import sys 
+import os
 import socket
-
-sys.path.append('../../accessors')
 import urllib2
 import BeautifulSoup
 import PerfSonarAccessor
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+sys.path.append('../../accessors')
 
 """
 This python module contains a mechanisms and assorted methods for lark tasks
@@ -36,20 +47,92 @@ command:
 """
 
 __author__ =  'Andrew B. Koerner'
-__email__=  'AndrewKoerner.b@gmail.com'
+__email__ =  'AndrewKoerner.b@gmail.com'
+
+__author__ =  'Bjorn Barrefors'
 
 class LarkUtilities(object):
 
+###############################################################################
+#                                                                             #
+#                       H e l p e r   F u n c t i o n s                       #
+#                                                                             #
+###############################################################################
     @staticmethod
     def normalizeWhitespace(str):
-        import re
-        str = str.strip()
-        str = re.sub(r'\s+', ' ', str)
-        return str
+        # Strip leading and trailing whitespace.
+        # Make all remaining whitespace (tabs, etc) to spaces.
+        # re is imported regular expression object
+        return re.sub(r'\s+', ' ', str.strip())
     
     @staticmethod
-    def locatePerfSonarInstances(ISO_3166CountryCode, perfSonarProjectName):
+    def getGeody(IP):
+        # Fetch location data from geody
+        geody = "http://www.geody.com/geoip.php?ip=" + IP
+        html_page = urllib2.urlopen(geody).read()
+        soup = BeautifulSoup.BeautifulSoup(html_page)
+        return soup('p')[3]
 
+    @staticmethod
+    def getCountries():
+        # Get a list of all countries from file.
+        # Is used for comparison later. File written in ISO standard
+        countries = []
+        lines = open("countries.txt", 'r').readlines()
+        for line in lines:
+            countries.append(line.strip().split('\t',1))
+        return countries
+
+    @staticmethod
+    def cityCountryParser(data):
+        # Seperate city and country into two str's
+        # Strip all else and return
+        # Check for unknown city/country
+        geo_txt = re.sub(r'<.*?>', '', str(data))
+        geo_txt = geo_txt[32:].upper().strip()
+        stripped_data = geo_txt.strip("IP: ").partition(': ')
+        city_country = stripped_data[2]
+        stripped = city_country.partition(' (')
+        city_txt = stripped[0]
+        #for i, key in enumerate(countries):
+        #    if  normalize_whitespace(countries[i][1]) in normalize_whitespace(city_country):
+        #        print haystack[i][1]
+        #        break
+        return city_txt
+
+    @staticmethod
+    def longLat(city_country):
+        # Find longitude and latitude of city/country.
+        return longitude, latitude
+
+    @staticmethod
+    def coordinateDiff(long1, lat1, long2, lat2):
+        # Find distance between two coordinates
+        return distance
+
+    @staticmethod
+    def IPGeolocate(IP):
+        # Get data about IP address and parse it to extract city and country.
+        # Translate city and country into longitude and latitude coordinates.
+        raw_data = getGeody(IP)
+        # countries = list(getCountries())
+        city_country = cityCountryParser(raw_data)
+        print(city_country)
+        longitude, latitude = longLat(city_country)
+        return longitude, latitude
+    
+    @staticmethod
+    def IPDistance(IP1, IP2):
+        # Given two IP addresses, find distance between these in real life
+        long1, lat1 = IPGeolocate(IP1)
+        long2, lat2 = IPGeolocate(IP2)
+        distance = coordinateDiff(long1, lat1, long2, lat2)
+        return distance
+
+
+
+    @staticmethod
+    def locatePerfSonarInstances(ISO_3166CountryCode, perfSonarProjectName):
         matchingCountryPerfSonarList = []
         perfSonarAccessor = PerfSonarAccessor.PerfSonarAccessor(perfSonarProjectName)
         perfSonarResources = perfSonarAccessor.getProjectSiteList()
@@ -82,7 +165,8 @@ class LarkUtilities(object):
         print perfSonarResources
         #print matchingCountryPerfSonarList
         return matchingCountryPerfSonarList
-    
+
+   
     @staticmethod
     def ISO_3166_1_ALPHA_2_IpAddressGeoLocate(ipAddress):
 
@@ -113,6 +197,3 @@ class LarkUtilities(object):
 
     #@staticmethod
     #def whois(ipAddressOrHostName, attributes):
-        
-         
-
