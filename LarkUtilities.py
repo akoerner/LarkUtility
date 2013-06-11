@@ -32,7 +32,6 @@ import math
 import urllib2
 import urllib
 import BeautifulSoup
-import PerfSonarAccessor
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
@@ -52,6 +51,8 @@ __author__ =  'Andrew B. Koerner'
 __email__ =  'AndrewKoerner.b@gmail.com'
 
 __author__ =  'Bjorn Barrefors'
+
+__organization__ = 'Holland Computing Center University of Nebraska - Lincoln'
 
 class LarkUtilities(object):
 
@@ -165,42 +166,6 @@ class LarkUtilities(object):
     #
     # Below are functions related to Lark
     #
-
-    @staticmethod
-    def locatePerfSonarInstances(ISO_3166CountryCode, perfSonarProjectName):
-        matchingCountryPerfSonarList = []
-        perfSonarAccessor = PerfSonarAccessor.PerfSonarAccessor(perfSonarProjectName)
-        perfSonarResources = perfSonarAccessor.getProjectSiteList()
-
-        for perfSonarResource in perfSonarResources:
-            isIp = re.match("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$", perfSonarResource)
-            #print perfSonarResource
-            if isIp:
-                currentIP = perfSonarResource
-            else:
-                try:
-                    currentIP = socket.gethostbyname(perfSonarResource)
-                except:
-                    continue
-                    #currentIP = socket.getaddrinfo(perfSonarResource, None, socket.AF_INET6)
-                    #print socket.getfqdn(currentIP)
-
-
-            currentISO_3166_1_ALPHA_2_CountryCode = LarkUtilities.ISO_3166_1_ALPHA_2_IpAddressGeoLocate(currentIP)
-            tempTouple = (perfSonarResource, currentISO_3166_1_ALPHA_2_CountryCode)
-            #print tempTouple
-            if currentISO_3166_1_ALPHA_2_CountryCode == None:
-                continue
-            if currentISO_3166_1_ALPHA_2_CountryCode[0] == None:
-                continue
-            #print ISO_3166CountryCode.lower() + " = " + currentISO_3166_1_ALPHA_2_CountryCode[0].lower() + " : " + ISO_3166CountryCode.lower() == currentISO_3166_1_ALPHA_2_CountryCode[0].lower()
-            if ISO_3166CountryCode.lower() == currentISO_3166_1_ALPHA_2_CountryCode[0].lower():
-                matchingCountryPerfSonarList.append(tempTouple)
-        
-        print perfSonarResources
-        #print matchingCountryPerfSonarList
-        return matchingCountryPerfSonarList
-
    
     @staticmethod
     def ISO_3166_1_ALPHA_2_IpAddressGeoLocate(ipAddress):
