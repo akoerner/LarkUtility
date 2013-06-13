@@ -232,3 +232,8 @@ class LarkUtilities(object):
 
     #@staticmethod
     #def whois(ipAddressOrHostName, attributes):
+
+def main():
+
+if __name__=="__main__":
+    main()

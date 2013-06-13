@@ -81,7 +81,7 @@ def IPGeolocate(IP):
     print(city_country)
     # Return coordinates for antarctica if unknown
     if "UNKNOWN" in normalizeWhitespace(city_country):
-        return -80, -100
+        return str(-80), str(-100)
     latitude, longitude = latLong(city_country)
     return latitude, longitude
 
