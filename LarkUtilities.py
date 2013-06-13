@@ -29,6 +29,7 @@ import sys
 import os
 import socket
 import math
+import sqlite3 as lite
 import urllib
 import urllib2
 import BeautifulSoup
@@ -155,13 +156,41 @@ class LarkUtilities(object):
         return distance
     
     @staticmethod
-    def IPDistance(IP1, IP2):
+    def IPDistance(IP1, IP2, con):
         # Given two IP addresses, find distance between these in real life
         # Pre: Two IP addresses in str format
         # Post: Distance in km between the two IP addresses in float
-        lat1, long1 = LarkUtilities.IPGeolocate(IP1)
-        lat2, long2 = LarkUtilities.IPGeolocate(IP2)
-        distance = LarkUtilities.coordinateDiff(lat1, long1, lat2, long2)
+        lat1 = ""
+        lat2 = ""
+        long1 = ""
+        long2 = ""
+        with con:
+            cur = con.cursor()
+            cur.execute("SELECT EXISTS(SELECT * FROM IPtoCoord WHERE IP=? LIMIT 1)", [IP1])
+            test = cur.fetchone()[0] 
+            if int(test) == int(1):
+                print "Fetch from cache 1"
+                cur.execute('SELECT Lat FROM IPtoCoord Where IP=?', [IP1])
+                lat1 = str(cur.fetchone()[0])
+                cur.execute('SELECT Long FROM IPtoCoord Where IP=?', [IP1])
+                long1 = str(cur.fetchone()[0])
+            else:
+                print "Fetch from Geody 1"
+                lat1, long1 = LarkUtilities.IPGeolocate(IP1)
+                cur.execute('INSERT INTO IPtoCoord VALUES(?,?,?)', (IP1,lat1,long1))
+            cur.execute('SELECT EXISTS(SELECT * FROM IPtoCoord WHERE IP=? LIMIT 1)', [IP2])
+            test = cur.fetchone()[0]
+            if int(test) == int(1):
+                print "Fetch from cache 1"
+                cur.execute('SELECT Lat FROM IPtoCoord Where IP=?', [IP2])
+                lat2 = (cur.fetchone()[0])
+                cur.execute('SELECT Long FROM IPtoCoord Where IP=?', [IP2])
+                long2 = (cur.fetchone()[0])
+            else:
+                print "Fetch from Geody 2"
+                lat2, long2 = LarkUtilities.IPGeolocate(IP2)
+                cur.execute('INSERT INTO IPtoCoord VALUES(?,?,?)', (IP2,lat2,long2))
+        distance = LarkUtilities.coordinateDiff(lat1, long1, lat2, long2)        
         return distance
 
     #
@@ -207,11 +236,19 @@ class LarkUtilities(object):
 
 def main(argv):
     if len(argv) == 2:
+        # Two IP addresses, find the distance between them
+        # Initialize SQLite3 db to check if IP is in cache
+        con = lite.connect('ip_cache.db')
+        with con:
+            cur = con.cursor()
+            cur.execute('CREATE TABLE IF NOT EXISTS IPtoCoord (IP TEXT, Lat TEXT, Long TEXT)')
         # To implement: Check valid IP in argv[0] and argv[1]
-        distance = LarkUtilities.IPDistance(argv[0], argv[1])
+        distance = LarkUtilities.IPDistance(str(argv[0]), str(argv[1]), con)
         print distance
         sys.exit()
     elif len(argv) == 1:
+        # One IP address, find geolocation
+        # Initialize SQLite3 db to check if IP is in cache
         # To implement: Check valid IP in argv[0]
         LarkUtilities.ISO_3166_1_ALPHA_2_IpAddressGeoLocate(argv[0])
         sys.exit()
