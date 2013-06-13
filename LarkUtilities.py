@@ -29,12 +29,13 @@ import sys
 import os
 import socket
 import math
-import urllib2
 import urllib
+import urllib2
 import BeautifulSoup
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
+usage = "usage: LarkUtilities.py -l <ipaddress> -d <ipaddress1> <ipaddress2>"
 os.chdir(dname)
 sys.path.append('../../accessors')
 
@@ -124,13 +125,13 @@ class LarkUtilities(object):
         # Translate city and country into longitude and latitude coordinates.
         # Pre: IP address in str format
         # Post: Longitude and latitude coordinates for IP address, str format
-        raw_data = getGeody(IP)
-        city_country = cityCountryParser(raw_data)
+        raw_data = LarkUtilities.getGeody(IP)
+        city_country = LarkUtilities.cityCountryParser(raw_data)
         print(city_country)
         # Return coordinates for antarctica if unknown position of IP
-        if "UNKNOWN" in normalizeWhitespace(city_country):
+        if "UNKNOWN" in LarkUtilities.normalizeWhitespace(city_country):
             return str(-80), str(-100)
-        latitude, longitude = latLong(city_country)
+        latitude, longitude = LarkUtilities.latLong(city_country)
         return latitude, longitude
 
     @staticmethod
@@ -158,9 +159,9 @@ class LarkUtilities(object):
         # Given two IP addresses, find distance between these in real life
         # Pre: Two IP addresses in str format
         # Post: Distance in km between the two IP addresses in float
-        lat1, long1 = IPGeolocate(IP1)
-        lat2, long2 = IPGeolocate(IP2)
-        distance = coordinateDiff(lat1, long1, lat2, long2)
+        lat1, long1 = LarkUtilities.IPGeolocate(IP1)
+        lat2, long2 = LarkUtilities.IPGeolocate(IP2)
+        distance = LarkUtilities.coordinateDiff(lat1, long1, lat2, long2)
         return distance
 
     #
@@ -198,7 +199,25 @@ class LarkUtilities(object):
     #@staticmethod
     #def whois(ipAddressOrHostName, attributes):
 
-def main():
+###############################################################################
+#                                                                             #
+#                                 M a i n                                     #
+#                                                                             #
+###############################################################################
+
+def main(argv):
+    if len(argv) == 2:
+        # To implement: Check valid IP in argv[0] and argv[1]
+        distance = LarkUtilities.IPDistance(argv[0], argv[1])
+        print distance
+        sys.exit()
+    elif len(argv) == 1:
+        # To implement: Check valid IP in argv[0]
+        LarkUtilities.ISO_3166_1_ALPHA_2_IpAddressGeoLocate(argv[0])
+        sys.exit()
+    else:
+        print usage
+        sys.exit()
 
 if __name__=="__main__":
-    main()
+    main(sys.argv[1:])
