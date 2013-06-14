@@ -75,6 +75,14 @@ class LarkUtilities(object):
         return re.sub(r'\s+', ' ', str.strip())
     
     @staticmethod
+    def IPToSubnet(IP):
+        # Convert IP into Class C subnet by replace everything after last
+        # '.' with '0'
+        # Pre: A valid IPv4 address
+        # Post: Valid Class C IPv4 subnet address
+        return re.sub(r'\.\d\d?\d?$', '.0', IP.strip())
+
+    @staticmethod
     def getGeody(IP):
         # Fetch location data from geody
         # Unknown behaviour on IPv6 address, only tested on IPv4
@@ -237,13 +245,16 @@ class LarkUtilities(object):
 def main(argv):
     if len(argv) == 2:
         # Two IP addresses, find the distance between them
+        subnet1 = LarkUtilities.IPToSubnet(str(argv[0]))
+        subnet2 = LarkUtilities.IPToSubnet(str(argv[1]))
+        print subnet1, subnet2
         # Initialize SQLite3 db to check if IP is in cache
         con = lite.connect('ip_cache.db')
         with con:
             cur = con.cursor()
             cur.execute('CREATE TABLE IF NOT EXISTS IPtoCoord (IP TEXT, Lat TEXT, Long TEXT)')
         # To implement: Check valid IP in argv[0] and argv[1]
-        distance = LarkUtilities.IPDistance(str(argv[0]), str(argv[1]), con)
+        distance = LarkUtilities.IPDistance(subnet1, subnet2, con)
         print distance
         sys.exit()
     elif len(argv) == 1:
